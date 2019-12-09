@@ -1,7 +1,19 @@
 #include "arena.hpp"
+#include "nave.hpp"
+#include "base.hpp"
+#include "pista.hpp"
+#include <vector>
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include "imageloader.h"
+#include "tinyxml2.h"
+
+#ifndef XMLCheckResult
+#define XMLCheckResult(a_eResult) if (a_eResult != XML_SUCCESS) { printf("Error: %i\n", a_eResult); return a_eResult; }
+#endif
+
+using namespace std;
+using namespace tinyxml2;
 
 //Camera controls
 double camDist=50;
@@ -14,8 +26,116 @@ int lastY = 0;
 int buttonDown=0;
 
 GLuint textureArena;
+GLuint texturePlayer;
+GLuint textureInimigo;
+GLuint textureBase;
+GLuint texturePista;
 
 Arena *arena;
+Nave *player;
+Pista *pista;
+vector<Nave*> enemies;
+vector<Base*> bases;
+
+string name;
+
+int readXml2(char* filename)
+{
+  string aux;
+
+  XMLDocument doc;
+  XMLError err = doc.LoadFile(strcat(filename, "config.xml"));
+
+  XMLCheckResult(err);
+
+  XMLNode* pRoot = doc.FirstChild();
+  XMLElement* pElement = pRoot->FirstChildElement("arquivoDaArena");
+
+  pElement = pRoot->FirstChildElement("arquivoDaArena");
+  pElement = pElement->FirstChildElement("nome");
+  name = pElement->GetText();
+
+  pElement = pRoot->FirstChildElement("arquivoDaArena");
+  pElement = pElement->FirstChildElement("tipo");
+  aux = pElement->GetText();
+
+  name = name + "." + aux;
+
+  pElement = pRoot->FirstChildElement("arquivoDaArena");
+  pElement = pElement->FirstChildElement("caminho");
+  aux = pElement->GetText();
+
+  name = aux + name;
+  cout << name;
+
+  float k, kTiro, freqTiro, kE, kTiroE;
+
+  pElement = pRoot->FirstChildElement("jogador");
+  pElement->QueryFloatAttribute("velTiro", &kTiro);
+  pElement->QueryFloatAttribute("vel", &k);
+
+  pElement = pRoot->FirstChildElement("inimigo");
+  pElement->QueryFloatAttribute("freqTiro", &freqTiro);
+  pElement->QueryFloatAttribute("vel", &kE);
+  pElement->QueryFloatAttribute("velTiro", &kTiroE);
+
+  XMLDocument svgDoc;
+
+  err = svgDoc.LoadFile(name.c_str());
+
+  XMLCheckResult(err);
+
+  XMLElement* svg = svgDoc.FirstChildElement("svg");
+  XMLElement* circle = svg->FirstChildElement("circle");
+  XMLElement* line = svg->FirstChildElement("line");
+
+  int id;
+  float x, y, radius;
+  string fill;
+
+  while(circle)
+  {
+    x = circle->FloatAttribute("cx");
+    y = circle->FloatAttribute("cy");
+    radius = circle->FloatAttribute("r");
+    id = circle->FloatAttribute("id");
+    fill = circle->Attribute("fill");
+
+    //Arena
+    if(fill == "blue")
+      arena = new Arena(x,y,radius,textureArena);
+
+    //Player
+    else if(fill == "green")
+      player = new Nave(x,y,radius,texturePlayer,k,kTiro);
+
+    //Flying Obstacles
+    else if(fill == "red")
+    {
+      Nave *n = new Nave(x,y,radius,textureInimigo,kE,kTiroE,freqTiro);
+      enemies.push_back(n);
+    }
+
+    //Ground Obstacles
+    else if(fill == "orange")
+    {
+      Base *b = new Base(x,y,radius,textureBase);
+      bases.push_back(b);
+    }
+
+    circle = circle->NextSiblingElement("circle");
+  }
+  float xo,yo;
+
+  x = line->FloatAttribute("x1");
+  y = line->FloatAttribute("y1");
+  xo = line->FloatAttribute("x2");
+  yo = line->FloatAttribute("y2");
+
+  pista = new Pista(x,y,xo,yo,texturePista);
+
+  return 0;
+}
 
 GLuint LoadTextureRAW( const char * filename )
 {
@@ -42,6 +162,15 @@ GLuint LoadTextureRAW( const char * filename )
   return texture;
 }
 
+void loadTextures()
+{
+  textureArena = LoadTextureRAW( "stars1.bmp" );
+  // texturePlayer = LoadTextureRAW( "stars1.bmp" );
+  // textureInimigo = LoadTextureRAW( "stars1.bmp" );
+  // textureBase = LoadTextureRAW( "stars1.bmp" );
+  // texturePista = LoadTextureRAW( "stars1.bmp" );
+}
+
 void init (void)
 {
   glEnable(GL_DEPTH_TEST);
@@ -51,10 +180,6 @@ void init (void)
   glShadeModel (GL_SMOOTH);
 
   glDepthFunc(GL_LEQUAL);
-
-  textureArena = LoadTextureRAW( "stars1.bmp" );
-
-  arena = new Arena(100,textureArena);
 
   glEnable(GL_LIGHT0);
 }
@@ -231,6 +356,22 @@ void keyboard(unsigned char key, int x, int y)
 
 int main(int argc, char**argv)
 {
+  if(argc != 2)
+  {
+      printf("Uso: %s <arquivo-xml-conf>\n", argv[0]);
+      return 1;
+  }
+
+  //Carregar Texturas
+  loadTextures();
+
+  //Ler xml
+  if(readXml2(argv[1]))
+  {
+      cout << "Erro!\n";
+      return 1;
+  }
+
   glutInit (&argc, argv);
 
   glutInitDisplayMode (GLUT_DOUBLE | GLUT_DEPTH);

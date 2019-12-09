@@ -1,19 +1,9 @@
-all: full
-
-full: arena.o tf.o imageloader.o
-	g++ arena.o tf.o imageloader.o -lGL -lGLU -lglut -lm -o trabalhocg
-
-tf.o:
-	g++ -c tf.cpp -o tf.o -std=c++11
-
-arena.o:
-	g++ -c arena.cpp -o arena.o -std=c++11
-
-imageloader.o:
-	g++ -c imageloader.cpp -o imageloader.o -std=c++11
-
-tiny.o:
-	g++ -c tinyxml2.cpp
+all: g++
+	@echo "OK"
 
 clean:
-	rm -f *.o trabalhocg
+	@rm -f *.o* .output trabalhocg
+	@echo "OK"
+
+g++:
+	g++ tf.cpp imageloader.cpp tinyxml2.cpp base.cpp nave.cpp arena.cpp pista.cpp projetil.cpp controle.cpp camera.cpp -o trabalhocg -lGL -lGLU -lglut -lm

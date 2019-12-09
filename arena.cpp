@@ -1,12 +1,15 @@
 #include "arena.hpp"
 
-Arena::Arena(GLfloat raio, GLint texture)
+Arena::Arena(GLfloat cx, GLfloat cy, GLfloat raio, GLint texture)
 {
+  this->cx = cx;
+  this->cy = cy;
   this->raio = raio;
   this->texture = texture;
 }
 
-void Arena::desenhaArena() {
+void Arena::desenhaArena()
+{
   GLfloat materialEmission[] = { 1.00, 1.00, 0.00, 1};
   GLfloat materialColor[] = { 1.0, 1.0, 0.0, 1};
   GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1};
