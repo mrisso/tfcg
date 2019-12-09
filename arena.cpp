@@ -6,8 +6,7 @@ Arena::Arena(GLfloat raio, GLint texture)
   this->texture = texture;
 }
 
-void Arena::desenhaArena()
-{
+void Arena::desenhaArena() {
   GLfloat materialEmission[] = { 1.00, 1.00, 0.00, 1};
   GLfloat materialColor[] = { 1.0, 1.0, 0.0, 1};
   GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1};
@@ -28,10 +27,10 @@ void Arena::desenhaArena()
 
     /* top triangle */
     double i, resolution  = 0.001;
-    double height = 4*20;
+    double height = 8*20;
 
     glPushMatrix();
-    glTranslatef(0, -0.5, -50);
+    //glTranslatef(0, -0.5, -50);
 
     glBegin(GL_TRIANGLE_FAN);
         glTexCoord2f( 0.5, 0.5 );

@@ -20,26 +20,26 @@ Arena *arena;
 GLuint LoadTextureRAW( const char * filename )
 {
 
-    GLuint texture;
-    Image* image = loadBMP(filename);
+  GLuint texture;
+  Image* image = loadBMP(filename);
 
-    glGenTextures( 1, &texture );
-    glBindTexture( GL_TEXTURE_2D, texture );
-    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR );
-    glTexImage2D(GL_TEXTURE_2D,                //Always GL_TEXTURE_2D
-                             0,                            //0 for now
-                             GL_RGB,                       //Format OpenGL uses for image
-                             image->width, image->height,  //Width and height
-                             0,                            //The border of the image
-                             GL_RGB, //GL_RGB, because pixels are stored in RGB format
-                             GL_UNSIGNED_BYTE, //GL_UNSIGNED_BYTE, because pixels are stored
-                                               //as unsigned numbers
-                             image->pixels);               //The actual pixel data
-    delete image;
+  glGenTextures( 1, &texture );
+  glBindTexture( GL_TEXTURE_2D, texture );
+  glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE,GL_MODULATE );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR );
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR );
+  glTexImage2D(GL_TEXTURE_2D,                //Always GL_TEXTURE_2D
+               0,                            //0 for now
+               GL_RGB,                       //Format OpenGL uses for image
+               image->width, image->height,  //Width and height
+               0,                            //The border of the image
+               GL_RGB, //GL_RGB, because pixels are stored in RGB format
+               GL_UNSIGNED_BYTE, //GL_UNSIGNED_BYTE, because pixels are stored
+               //as unsigned numbers
+               image->pixels);               //The actual pixel data
+  delete image;
 
-    return texture;
+  return texture;
 }
 
 void init (void)
@@ -54,28 +54,68 @@ void init (void)
 
   textureArena = LoadTextureRAW( "stars1.bmp" );
 
-  arena = new Arena(50,textureArena);
+  arena = new Arena(100,textureArena);
 
   glEnable(GL_LIGHT0);
+}
+
+void DrawAxes()
+{
+    GLfloat mat_ambient_r[] = { 1.0, 0.0, 0.0, 1.0 };
+    GLfloat mat_ambient_g[] = { 0.0, 1.0, 0.0, 1.0 };
+    GLfloat mat_ambient_b[] = { 0.0, 0.0, 1.0, 1.0 };
+
+    glPushAttrib(GL_ENABLE_BIT);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_TEXTURE_2D);
+
+        //x axis
+        glPushMatrix();
+            glColor3fv(mat_ambient_r);
+            glScalef(5, 0.3, 0.3);
+            glTranslatef(0.5, 0, 0); // put in one end
+            glutSolidCube(1.0);
+        glPopMatrix();
+
+        //y axis
+        glPushMatrix();
+            glColor3fv(mat_ambient_g);
+            glRotatef(90,0,0,1);
+            glScalef(5, 0.3, 0.3);
+            glTranslatef(0.5, 0, 0); // put in one end
+            glutSolidCube(1.0);
+        glPopMatrix();
+
+        //z axis
+        glPushMatrix();
+            glColor3fv(mat_ambient_b);
+            glRotatef(-90,0,1,0);
+            glScalef(5, 0.3, 0.3);
+            glTranslatef(0.5, 0, 0); // put in one end
+            glutSolidCube(1.0);
+        glPopMatrix();
+    glPopAttrib();
 }
 
 
 void display(void)
 {
-    glClearColor (0.0,0.0,0.0,1.0);
-    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
+  glClearColor (0.0,0.0,0.0,1.0);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glLoadIdentity();
 
-    glTranslatef(0,0,-camDist);
-    glRotatef(camXZAngle,1,0,0);
-    glRotatef(camXYAngle,0,1,0);
+  glTranslatef(0,0,-camDist);
+  glRotatef(camXZAngle,1,0,0);
+  glRotatef(camXYAngle,0,1,0);
 
-    GLfloat light_position[] = { 1.0, 0.0, 0.0, 1.0 };
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  DrawAxes();
 
-    arena->desenhaArena();
+  GLfloat light_position[] = { 0.0, 0.0, 0.0, 1.0 };
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
-    glutSwapBuffers();
+  arena->desenhaArena();
+
+  glutSwapBuffers();
 }
 
 void idle(void)
@@ -129,63 +169,64 @@ void reshape (int w, int h) {
 
 void keyboard(unsigned char key, int x, int y)
 {
-    static bool textureEnebled = true;
-    static bool lightingEnebled = true;
-    static bool smoothEnebled = true;
-    switch (key) {
-        case '0':
-            toggleCam = 0;
-            break;
-        case '1':
-            toggleCam = 1;
-            break;
-        case '2':
-            toggleCam = 2;
-            break;
-        case 't':
-            if ( textureEnebled ){
-                glDisable( GL_TEXTURE_2D );
-            }else{
-                glEnable( GL_TEXTURE_2D );
-            }
-            textureEnebled = !textureEnebled; 
-            break;
-        case 'l':
-            if ( lightingEnebled ){
-                glDisable( GL_LIGHTING );
-            }else{
-                glEnable( GL_LIGHTING );
-            }
-            lightingEnebled = !lightingEnebled; 
-            break;
-        case 's':
-            if ( smoothEnebled ){
-                glShadeModel (GL_FLAT);
-            }else{
-                glShadeModel (GL_SMOOTH);
-            }
-            smoothEnebled = !smoothEnebled; 
-            break;
-        case '+':
-        {
-            int inc = camAngle >= 180 ? 0 : 1;
-            camAngle += inc;
-            changeCamera(camAngle, 
-                    glutGet(GLUT_WINDOW_WIDTH), 
-                    glutGet(GLUT_WINDOW_HEIGHT));
-            break;
-        }
-        case '-':
-        {
-            int inc = camAngle <= 5 ? 0 : 1;
-            camAngle -= inc;
-            changeCamera(camAngle, glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
-            break;
-        }
-        case 27:
-            exit(0);
-            break;
+  static bool textureEnebled = true;
+  static bool lightingEnebled = true;
+  switch (key) {
+  case '0':
+    toggleCam = 0;
+    break;
+  case '1':
+    toggleCam = 1;
+    break;
+  case '2':
+    toggleCam = 2;
+    break;
+  case 't':
+    if ( textureEnebled ){
+      glDisable( GL_TEXTURE_2D );
+    }else{
+      glEnable( GL_TEXTURE_2D );
     }
+    textureEnebled = !textureEnebled;
+    break;
+  case 'l':
+    if ( lightingEnebled ){
+      glDisable( GL_LIGHTING );
+    }else{
+      glEnable( GL_LIGHTING );
+    }
+    lightingEnebled = !lightingEnebled;
+    break;
+  case '+':
+    {
+      int inc = camAngle >= 180 ? 0 : 1;
+      camAngle += inc;
+      changeCamera(camAngle,
+                   glutGet(GLUT_WINDOW_WIDTH),
+                   glutGet(GLUT_WINDOW_HEIGHT));
+      break;
+    }
+  case '-':
+    {
+      int inc = camAngle <= 5 ? 0 : 1;
+      camAngle -= inc;
+      changeCamera(camAngle, glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
+      break;
+    }
+  case 'w':
+    {
+      camDist -= 1;
+      break;
+    }
+  case 's':
+    {
+      camDist+=1;
+      break;
+    }
+  case 27:
+    exit(0);
+    break;
+  }
 }
 
 int main(int argc, char**argv)
