@@ -362,16 +362,6 @@ int main(int argc, char**argv)
       return 1;
   }
 
-  //Carregar Texturas
-  loadTextures();
-
-  //Ler xml
-  if(readXml2(argv[1]))
-  {
-      cout << "Erro!\n";
-      return 1;
-  }
-
   glutInit (&argc, argv);
 
   glutInitDisplayMode (GLUT_DOUBLE | GLUT_DEPTH);
@@ -383,6 +373,16 @@ int main(int argc, char**argv)
   glutCreateWindow ("A basic OpenGL Window");
 
   init();
+
+  //Carregar Texturas
+  loadTextures();
+
+  //Ler xml
+  if(readXml2(argv[1]))
+  {
+      cout << "Erro!\n";
+      return 1;
+  }
 
   glutDisplayFunc (display);
 
